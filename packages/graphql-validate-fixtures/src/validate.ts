@@ -14,6 +14,7 @@ import {
   isNonNullType,
   isObjectType,
   isScalarType,
+  isUnionType,
 } from 'graphql';
 import {GraphQLProjectConfig} from 'graphql-config';
 import {AST, Field, Operation} from 'graphql-tool-utilities';
@@ -246,8 +247,12 @@ function validateValueAgainstObjectFieldDescription(
     return [];
   }
 
-  const {fields = [], fragmentSpreads = [], type} = fieldDescription;
-
+  const {
+    fields = [],
+    fragmentSpreads = [],
+    type,
+    inlineFragments = [],
+  } = fieldDescription;
   const fragmentFields: Field[] = [];
 
   if (fragmentSpreads) {
@@ -267,6 +272,27 @@ function validateValueAgainstObjectFieldDescription(
             isGuaranteedTypeMatch
               ? field
               : {...field, type: makeTypeNullable(field.type)},
+          );
+        });
+      });
+  }
+
+  if (isUnionType(type.ofType)) {
+    const memberTypes = type.ofType
+      .getTypes()
+      .filter((memberType) => memberType.name === value.__typename);
+    memberTypes
+      .map((memberType) => inlineFragments[memberType.name])
+      .forEach((fragment) => {
+        fragment.fields.forEach((field) => {
+          if (fields.some(({fieldName}) => fieldName === field.fieldName)) {
+            return;
+          }
+
+          const isGuaranteedTypeMatch = fragment.possibleTypes.includes(type);
+
+          fragmentFields.push(
+            isGuaranteedTypeMatch ? field : {...field, type: field.type},
           );
         });
       });
@@ -498,6 +524,78 @@ function validateValueAgainstType(
     }
   }
 
+  if (isUnionType(type)) {
+    const memberTypes = type.getTypes();
+
+    if (memberTypes.length === 0) {
+      return [
+        error(
+          keyPath,
+          'Union type '.concat(
+            type.name,
+            ' must define one or more member types.',
+          ),
+          getAllNodes(type),
+        ),
+      ];
+    }
+
+    const includedTypeNames = Object.create(null);
+
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of
+    for (let _i24 = 0; _i24 < memberTypes.length; _i24++) {
+      const memberType = memberTypes[_i24];
+
+      if (includedTypeNames[memberType.name]) {
+        return [
+          error(
+            keyPath,
+            'Union type '
+              .concat(type.name, ' can only include type ')
+              .concat(memberType.name, ' once.'),
+            getUnionMemberTypeNodes(union, memberType.name),
+          ),
+        ];
+      }
+
+      includedTypeNames[memberType.name] = true;
+
+      if (!isObjectType(memberType)) {
+        return [error(keyPath, `should be an object but was a ${valueType}`)];
+      }
+
+      const object = Object(value);
+      if (memberType.name === object.__typename) {
+        const fields = memberType.getFields();
+        return Object.keys(value).reduce((fieldErrors: Error[], key) => {
+          const fieldKeyPath = updateKeyPath(keyPath, key);
+
+          if (key === '__typename') {
+            return [];
+          }
+
+          return fields[key] == null
+            ? fieldErrors.concat([
+                error(
+                  fieldKeyPath,
+                  `does not exist on type ${
+                    type.name
+                  } (available fields: ${Object.keys(fields).join(', ')})`,
+                ),
+              ])
+            : fieldErrors.concat(
+                validateValueAgainstType(
+                  value[key],
+                  fields[key].type,
+                  fieldKeyPath,
+                  options,
+                ),
+              );
+        }, []);
+      }
+    }
+  }
+
   return [];
 }
 
@@ -530,4 +628,44 @@ function updateKeyPath(keyPath: KeyPath, newKey: string | number) {
 
 function error(keyPath: KeyPath, message: string): Error {
   return {keyPath, message};
+}
+
+function getAllNodes(object) {
+  const astNode = object.astNode;
+  const extensionASTNodes = object.extensionASTNodes;
+  return astNode
+    ? extensionASTNodes
+      ? [astNode].concat(extensionASTNodes)
+      : [astNode]
+    : extensionASTNodes !== null && extensionASTNodes !== void 0
+    ? extensionASTNodes
+    : [];
+}
+
+function getUnionMemberTypeNodes(union, typeName) {
+  return getAllSubNodes(union, function (unionNode) {
+    return unionNode.types;
+  }).filter(function (typeNode) {
+    return typeNode.name.value === typeName;
+  });
+}
+
+function getAllSubNodes(object, getter) {
+  let subNodes = [];
+
+  for (
+    let _i32 = 0, _getAllNodes2 = getAllNodes(object);
+    _i32 < _getAllNodes2.length;
+    _i32++
+  ) {
+    var _getter;
+
+    const node = _getAllNodes2[_i32];
+    // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
+    subNodes = subNodes.concat(
+      (_getter = getter(node)) !== null && _getter !== void 0 ? _getter : [],
+    );
+  }
+
+  return subNodes;
 }

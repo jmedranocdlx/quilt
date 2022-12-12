@@ -356,6 +356,70 @@ describe('validate', () => {
           validateAgainstAST({chris: {nom: 'Chris'}}, ast),
         ).toMatchSnapshot();
       });
+
+      it('validates unions', () => {
+        const ast = createAST(
+          `
+          type Query {
+            vehicle: Vehicle!
+          }
+
+          type Car {
+            driverName: String!
+          }
+
+          type Airplane {
+            pilotName: String!
+          }
+
+          union Vehicle = Car | Airplane
+        `,
+          `
+          query VehicleQuery {
+            vehicle {
+              __typename
+              ... on Car {
+                driverName
+              }
+              ... on Airplane {
+                pilotName
+              }
+            }
+          }
+        `,
+        );
+
+        expect(validateAgainstAST({}, ast)).toMatchSnapshot();
+        expect(validateAgainstAST({vehicle: null}, ast)).toMatchSnapshot();
+        expect(validateAgainstAST({vehicle: {}}, ast)).toMatchSnapshot();
+        expect(
+          validateAgainstAST(
+            {vehicle: {__typename: 'Bike', driverName: 'John'}},
+            ast,
+          ),
+        ).toMatchSnapshot();
+        expect(
+          validateAgainstAST(
+            {vehicle: {__typename: 'Car', driverName: 123}},
+            ast,
+          ),
+        ).toMatchSnapshot();
+        expect(
+          validateAgainstAST({vehicle: {__typename: 'Car'}}, ast),
+        ).toMatchSnapshot();
+        expect(
+          validateAgainstAST(
+            {vehicle: {__typename: 'Car', driverName: 'Dale'}},
+            ast,
+          ),
+        ).toMatchSnapshot();
+        expect(
+          validateAgainstAST(
+            {vehicle: {__typename: 'Airplane', pilotName: 'Shirley'}},
+            ast,
+          ),
+        ).toMatchSnapshot();
+      });
     });
 
     describe('fragments', () => {

@@ -1015,6 +1015,116 @@ Object {
 }
 `;
 
+exports[`validate validateFixtureAgainstAST() objects validates unions 1`] = `
+Object {
+  "fixturePath": "VehicleQuery/fixture.json",
+  "operationName": "VehicleQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [
+    Object {
+      "keyPath": "vehicle",
+      "message": "should be non-null but was undefined",
+    },
+  ],
+}
+`;
+
+exports[`validate validateFixtureAgainstAST() objects validates unions 2`] = `
+Object {
+  "fixturePath": "VehicleQuery/fixture.json",
+  "operationName": "VehicleQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [
+    Object {
+      "keyPath": "vehicle",
+      "message": "should be non-null but was null",
+    },
+  ],
+}
+`;
+
+exports[`validate validateFixtureAgainstAST() objects validates unions 3`] = `
+Object {
+  "fixturePath": "VehicleQuery/fixture.json",
+  "operationName": "VehicleQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [
+    Object {
+      "keyPath": "vehicle.__typename",
+      "message": "should be non-null but was undefined",
+    },
+  ],
+}
+`;
+
+exports[`validate validateFixtureAgainstAST() objects validates unions 4`] = `
+Object {
+  "fixturePath": "VehicleQuery/fixture.json",
+  "operationName": "VehicleQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [
+    Object {
+      "keyPath": "vehicle",
+      "message": "has key 'driverName' not present in the query",
+    },
+  ],
+}
+`;
+
+exports[`validate validateFixtureAgainstAST() objects validates unions 5`] = `
+Object {
+  "fixturePath": "VehicleQuery/fixture.json",
+  "operationName": "VehicleQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [
+    Object {
+      "keyPath": "vehicle.driverName",
+      "message": "should be a string but was a number",
+    },
+  ],
+}
+`;
+
+exports[`validate validateFixtureAgainstAST() objects validates unions 6`] = `
+Object {
+  "fixturePath": "VehicleQuery/fixture.json",
+  "operationName": "VehicleQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [
+    Object {
+      "keyPath": "vehicle.driverName",
+      "message": "should be non-null but was undefined",
+    },
+  ],
+}
+`;
+
+exports[`validate validateFixtureAgainstAST() objects validates unions 7`] = `
+Object {
+  "fixturePath": "VehicleQuery/fixture.json",
+  "operationName": "VehicleQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [],
+}
+`;
+
+exports[`validate validateFixtureAgainstAST() objects validates unions 8`] = `
+Object {
+  "fixturePath": "VehicleQuery/fixture.json",
+  "operationName": "VehicleQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [],
+}
+`;
+
 exports[`validate validateFixtureAgainstAST() validates booleans 1`] = `
 Object {
   "fixturePath": "MarriedQuery/fixture.json",
