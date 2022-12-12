@@ -1,5 +1,37 @@
 # Changelog
 
+## 3.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`da04b9e63`](https://github.com/Shopify/quilt/commit/da04b9e63819a51abfca04008e01f6935d886297)]:
+  - @shopify/statsd@4.1.1
+
+## 3.4.0
+
+### Minor Changes
+
+- [#2490](https://github.com/Shopify/quilt/pull/2490) [`c31016fa3`](https://github.com/Shopify/quilt/commit/c31016fa321ef5449973a7eb50e63fe7a86184dc) Thanks [@alexandcote](https://github.com/alexandcote)! - The middleware now accepts an optional StatsDClient instance
+
+## 3.3.1
+
+### Patch Changes
+
+- Updated dependencies [[`9396ac6eb`](https://github.com/Shopify/quilt/commit/9396ac6eb66220ad1dd40c57f66c193cd14e4780), [`472e3556a`](https://github.com/Shopify/quilt/commit/472e3556a07cb3315261e043d19a44a01ca17432), [`dcb3c54c0`](https://github.com/Shopify/quilt/commit/dcb3c54c064331ce45cc99958dd68d0d0a769f72), [`da62f58f4`](https://github.com/Shopify/quilt/commit/da62f58f46bb3a27f55ef4cc59c5292b9a842a24)]:
+  - @shopify/statsd@4.1.0
+  - @shopify/performance@3.2.1
+
+## 3.3.0
+
+### Minor Changes
+
+- [#2478](https://github.com/Shopify/quilt/pull/2478) [`1570b951d`](https://github.com/Shopify/quilt/commit/1570b951d2f865120dcf7f198d23a4e935fe6042) Thanks [@ryanwilsonperkin](https://github.com/ryanwilsonperkin)! - Add a new metric to track Largest Contentful Paint
+
+### Patch Changes
+
+- Updated dependencies [[`1570b951d`](https://github.com/Shopify/quilt/commit/1570b951d2f865120dcf7f198d23a4e935fe6042)]:
+  - @shopify/performance@3.2.0
+
 ## 3.2.1
 
 ### Patch Changes

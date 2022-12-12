@@ -12,32 +12,24 @@ import withEnv from '@shopify/with-env';
 
 import {clientPerformanceMetrics, Metrics} from '../middleware';
 
-jest.mock('@shopify/statsd', () => {
-  return {
-    StatsDClient: class StatsDClient {
-      static distributionSpy = jest.fn();
-      static closeSpy = jest.fn();
-      close = StatsDClient.closeSpy;
-      distribution = StatsDClient.distributionSpy;
-    },
-  };
+jest.mock('@shopify/statsd');
+const StatsDClient = jest.requireMock('@shopify/statsd').StatsDClient;
+const statsd = new StatsDClient({
+  host: 'foo.com',
+  port: 3000,
+  prefix: 'test',
 });
 
 const config = {
-  statsdHost: 'foo.com',
-  statsdPort: 3000,
-  prefix: 'tests',
+  statsd,
   development: false,
   logger: {log: jest.fn()},
 };
 
-const StatsDClient = jest.requireMock('@shopify/statsd').StatsDClient;
-
 describe('client metrics middleware', () => {
   beforeEach(() => {
     config.logger.log.mockReset();
-    StatsDClient.distributionSpy.mockReset();
-    StatsDClient.closeSpy.mockReset();
+    statsd.distribution.mockReset();
   });
 
   it('returns Ok if the request body contains metrics information', async () => {
@@ -83,7 +75,7 @@ describe('client metrics middleware', () => {
         );
       });
 
-      StatsDClient.distributionSpy.mock.calls.forEach(
+      statsd.distribution.mock.calls.forEach(
         ([, , tags]: [never, never, any]) => {
           expect(tags).toHaveProperty('browser_connection_type', '3G');
         },
@@ -106,7 +98,7 @@ describe('client metrics middleware', () => {
         );
       });
 
-      StatsDClient.distributionSpy.mock.calls.forEach(
+      statsd.distribution.mock.calls.forEach(
         ([, , tags]: [never, never, any]) => {
           expect(tags).toHaveProperty('browser_connection_type', '3G');
         },
@@ -129,7 +121,7 @@ describe('client metrics middleware', () => {
         );
       });
 
-      StatsDClient.distributionSpy.mock.calls.forEach(
+      statsd.distribution.mock.calls.forEach(
         ([, , tags]: [never, never, any]) => {
           expect(tags).toHaveProperty('browser_connection_type', 'Unknown');
         },
@@ -177,7 +169,7 @@ describe('client metrics middleware', () => {
         })(context, () => Promise.resolve());
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         expect.anything(),
         expect.anything(),
         expect.objectContaining(additionalTags),
@@ -202,7 +194,7 @@ describe('client metrics middleware', () => {
         );
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(Number),
         expect.objectContaining({
@@ -229,7 +221,7 @@ describe('client metrics middleware', () => {
         );
       });
 
-      expect(StatsDClient.distributionSpy).not.toHaveBeenCalledWith(
+      expect(statsd.distribution).not.toHaveBeenCalledWith(
         expect.any(String),
         expect.any(Number),
         expect.objectContaining({locale: expect.anything()}),
@@ -244,11 +236,15 @@ describe('client metrics middleware', () => {
         EventType.TimeToFirstContentfulPaint,
         123,
       );
+      const ttlcpEvent = createLifecycleEvent(
+        EventType.TimeToLargestContentfulPaint,
+        456,
+      );
 
       const context = createMockContext({
         method: Method.Post,
         requestBody: createBody({
-          events: [ttfbEvent, ttfcpEvent],
+          events: [ttfbEvent, ttfcpEvent, ttlcpEvent],
         }),
       });
 
@@ -258,15 +254,21 @@ describe('client metrics middleware', () => {
         );
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'time_to_first_byte',
         ttfbEvent.start,
         expect.any(Object),
       );
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'time_to_first_contentful_paint',
         ttfcpEvent.start,
+        expect.any(Object),
+      );
+
+      expect(statsd.distribution).toHaveBeenCalledWith(
+        'time_to_largest_contentful_paint',
+        ttlcpEvent.start,
         expect.any(Object),
       );
     });
@@ -292,7 +294,7 @@ describe('client metrics middleware', () => {
         );
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'redirect_duration',
         ttfbEvent.metadata?.redirectDuration,
         expect.any(Object),
@@ -319,7 +321,7 @@ describe('client metrics middleware', () => {
         );
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'first_input_delay',
         456,
         expect.any(Object),
@@ -355,13 +357,13 @@ describe('client metrics middleware', () => {
         );
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'navigation_complete',
         complete,
         expect.any(Object),
       );
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'navigation_usable',
         usable,
         expect.any(Object),
@@ -382,13 +384,13 @@ describe('client metrics middleware', () => {
         );
       });
 
-      expect(StatsDClient.distributionSpy).not.toHaveBeenCalledWith(
+      expect(statsd.distribution).not.toHaveBeenCalledWith(
         'navigation_download_size',
         expect.any(Number),
         expect.any(Object),
       );
 
-      expect(StatsDClient.distributionSpy).not.toHaveBeenCalledWith(
+      expect(statsd.distribution).not.toHaveBeenCalledWith(
         'navigation_cache_effectiveness',
         expect.any(Number),
         expect.any(Object),
@@ -424,13 +426,13 @@ describe('client metrics middleware', () => {
         );
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'navigation_cache_effectiveness',
         0,
         expect.any(Object),
       );
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'navigation_download_size',
         size,
         expect.any(Object),
@@ -457,7 +459,7 @@ describe('client metrics middleware', () => {
       });
 
       expect(spy).toHaveBeenCalledWith(expect.any(Navigation), context);
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'navigation_complete',
         expect.any(Number),
         expect.objectContaining(additionalTags),
@@ -484,7 +486,7 @@ describe('client metrics middleware', () => {
       });
 
       expect(spy).toHaveBeenCalledWith(expect.any(Navigation), context);
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         additionalMetric.name,
         additionalMetric.value,
         expect.any(Object),
@@ -513,7 +515,7 @@ describe('client metrics middleware', () => {
         })(context, () => Promise.resolve());
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         additionalMetric.name,
         additionalMetric.value,
         expect.objectContaining(additionalMetric.tags),
@@ -541,7 +543,7 @@ describe('client metrics middleware', () => {
         })(context, () => Promise.resolve());
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'navigation_complete',
         expect.any(Number),
         expect.objectContaining({anomalous: true}),
@@ -569,7 +571,7 @@ describe('client metrics middleware', () => {
         })(context, () => Promise.resolve());
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'navigation_complete',
         expect.any(Number),
         expect.objectContaining({anomalous: false}),
@@ -610,7 +612,7 @@ describe('client metrics middleware', () => {
         })(context, () => Promise.resolve());
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'navigation_download_size',
         expect.any(Number),
         expect.objectContaining({anomalous: true}),
@@ -651,7 +653,7 @@ describe('client metrics middleware', () => {
         })(context, () => Promise.resolve());
       });
 
-      expect(StatsDClient.distributionSpy).toHaveBeenCalledWith(
+      expect(statsd.distribution).toHaveBeenCalledWith(
         'navigation_download_size',
         expect.any(Number),
         expect.objectContaining({anomalous: false}),
@@ -675,7 +677,7 @@ describe('client metrics middleware', () => {
         );
       });
 
-      expect(StatsDClient.distributionSpy).not.toHaveBeenCalled();
+      expect(statsd.distribution).not.toHaveBeenCalled();
     });
 
     it('logs distributions', async () => {

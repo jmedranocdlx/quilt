@@ -1,6 +1,6 @@
 {
   "name": "@shopify/performance",
-  "version": "3.1.1",
+  "version": "3.2.1",
   "license": "MIT",
   "description": "Primitives for collecting browser performance metrics",
   "main": "index.js",
@@ -40,5 +40,8 @@
       "import": "./index.mjs",
       "require": "./index.js"
     }
+  },
+  "dependencies": {
+    "web-vitals": "^3.0.4"
   }
 }

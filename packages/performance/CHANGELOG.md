@@ -1,5 +1,17 @@
 # Changelog
 
+## 3.2.1
+
+### Patch Changes
+
+- [#2488](https://github.com/Shopify/quilt/pull/2488) [`dcb3c54c0`](https://github.com/Shopify/quilt/commit/dcb3c54c064331ce45cc99958dd68d0d0a769f72) Thanks [@ryanwilsonperkin](https://github.com/ryanwilsonperkin)! - Switch recording of FCP, TTFB, FID to web-vitals implementation in place of custom solution
+
+## 3.2.0
+
+### Minor Changes
+
+- [#2478](https://github.com/Shopify/quilt/pull/2478) [`1570b951d`](https://github.com/Shopify/quilt/commit/1570b951d2f865120dcf7f198d23a4e935fe6042) Thanks [@ryanwilsonperkin](https://github.com/ryanwilsonperkin)! - Add a new metric to track Largest Contentful Paint
+
 ## 3.1.1
 
 ### Patch Changes

@@ -1,4 +1,8 @@
-import {StatsD, ClientOptions} from 'hot-shots';
+import {
+  StatsD,
+  ClientOptions as HotShotClientOptions,
+  ChildClientOptions as HotShotChildOptions,
+} from 'hot-shots';
 import {snakeCase} from 'change-case';
 
 const UNKNOWN = 'Unknown';
@@ -11,25 +15,51 @@ type Tags =
   | {[key: string]: string | number | boolean | null | undefined}
   | string[];
 
-export interface Options extends ClientOptions {
+export interface ClientOptions extends HotShotClientOptions {
   logger?: Logger;
   snakeCase?: boolean;
 }
 
-export class StatsDClient {
-  private statsd: StatsD;
-  private logger: Logger = console;
-  private options: Options;
+export interface ChildOptions extends HotShotChildOptions {
+  client: StatsDClient;
+  snakeCase?: boolean;
+}
 
-  constructor({logger, ...options}: Options) {
+export type Options = ClientOptions | ChildOptions;
+
+export class StatsDClient {
+  protected statsd: StatsD;
+  protected logger: Logger = console;
+  protected options: ClientOptions;
+
+  constructor(options: Options) {
+    if (isChildOptions(options)) {
+      const {client, prefix, ...childOptions} = options;
+      this.logger = client.logger;
+      this.options = {...client.options, ...childOptions};
+      this.statsd = client.statsd.childClient(childOptions);
+
+      if (prefix) {
+        // The concatenation of the prefix in the library is the inverse of what we want.
+        // The library concatenates the prefix like that: <ChildPrefix><ParentPrefix>
+        // but in most case we want to concatenate like this: <ParentPrefix><ChildPrefix>
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.statsd.prefix = `${this.statsd.prefix}${prefix}`;
+      }
+      return;
+    }
+
+    const {logger, snakeCase, ...statsdOptions} = options;
+
     if (logger) {
       this.logger = logger;
     }
 
     this.options = {
       ...options,
-      errorHandler: options.errorHandler
-        ? options.errorHandler
+      errorHandler: statsdOptions.errorHandler
+        ? statsdOptions.errorHandler
         : (error: Error) => {
             this.logger.log(
               `Error occurred in the StatsD client:\n${
@@ -92,6 +122,10 @@ export class StatsDClient {
     });
   }
 
+  childClient(options?: Omit<ChildOptions, 'client'>) {
+    return new StatsDClient({client: this, ...options});
+  }
+
   addGlobalTags(globalTags: Tags) {
     this.statsd = this.statsd.childClient({
       globalTags: this.normalizeTags(globalTags),
@@ -127,4 +161,8 @@ export class StatsDClient {
 
     return output;
   }
+}
+
+function isChildOptions(options: Options): options is ChildOptions {
+  return 'client' in options;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@shopify/statsd",
-  "version": "4.0.1",
+  "version": "4.1.1",
   "license": "MIT",
   "description": "An opinionated StatsD client for Shopify Node.js servers and other StatsD utilities",
   "main": "index.js",
@@ -25,7 +25,7 @@
   },
   "dependencies": {
     "change-case": "^4.1.1",
-    "hot-shots": "^8.2.0"
+    "hot-shots": "^9.3.0"
   },
   "files": [
     "build/",
