@@ -1,6 +1,6 @@
 {
-  "name": "@dosh/graphql-validate-fixtures",
-  "version": "3.1.2",
+  "name": "@jmedranocdlx/graphql-validate-fixtures",
+  "version": "3.1.5",
   "license": "MIT",
   "description": "Validates JSON fixtures for GraphQL responses against the associated operations and schema",
   "main": "index.js",
@@ -14,7 +14,7 @@
   "author": "Shopify Inc.",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Shopify/quilt.git",
+    "url": "git+https://github.com/jmedranocdlx/quilt",
     "directory": "packages/graphql-validate-fixtures"
   },
   "bugs": {

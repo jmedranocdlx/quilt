@@ -215,6 +215,20 @@ describe('validate', () => {
           validateAgainstAST({people: [{name: 'Chris', age: 42}]}, ast),
         ).toMatchSnapshot();
       });
+
+      it('works with nested data', () => {
+        const ast = createAST(
+          `
+          type Query {
+            title: String!
+          }
+        `,
+          'query MyQuery { title }',
+        );
+        expect(
+          validateAgainstAST({data: {title: 'Some Title'}}, ast),
+        ).toMatchSnapshot();
+      });
     });
 
     describe('objects', () => {

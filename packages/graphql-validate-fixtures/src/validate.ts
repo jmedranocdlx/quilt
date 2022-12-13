@@ -184,7 +184,9 @@ export function validateFixture(
   operation: Operation,
 ): Validation {
   const {fields = [], filePath, operationType} = operation;
-  const value = {...fixture.content};
+  const fixtureContent =
+    fixture.content.data === undefined ? fixture.content : fixture.content.data;
+  const value = {...fixtureContent};
   delete value[OPERATION_MARKER];
 
   return {
@@ -213,6 +215,7 @@ function validateValueAgainstFieldDescription(
 ): Error[] {
   const {type, responseName} = fieldDescription;
   const keyPath = updateKeyPath(parentKeyPath, responseName);
+
   const typeErrors = validateValueAgainstType(value, type, keyPath, {
     shallow: true,
   });
@@ -277,8 +280,8 @@ function validateValueAgainstObjectFieldDescription(
       });
   }
 
-  if (isUnionType(type.ofType)) {
-    const memberTypes = type.ofType
+  if (isUnionType(makeTypeNullable(type))) {
+    const memberTypes = makeTypeNullable(type)
       .getTypes()
       .filter((memberType) => memberType.name === value.__typename);
     memberTypes
@@ -535,7 +538,6 @@ function validateValueAgainstType(
             type.name,
             ' must define one or more member types.',
           ),
-          getAllNodes(type),
         ),
       ];
     }
@@ -553,7 +555,6 @@ function validateValueAgainstType(
             'Union type '
               .concat(type.name, ' can only include type ')
               .concat(memberType.name, ' once.'),
-            getUnionMemberTypeNodes(union, memberType.name),
           ),
         ];
       }
@@ -628,44 +629,4 @@ function updateKeyPath(keyPath: KeyPath, newKey: string | number) {
 
 function error(keyPath: KeyPath, message: string): Error {
   return {keyPath, message};
-}
-
-function getAllNodes(object) {
-  const astNode = object.astNode;
-  const extensionASTNodes = object.extensionASTNodes;
-  return astNode
-    ? extensionASTNodes
-      ? [astNode].concat(extensionASTNodes)
-      : [astNode]
-    : extensionASTNodes !== null && extensionASTNodes !== void 0
-    ? extensionASTNodes
-    : [];
-}
-
-function getUnionMemberTypeNodes(union, typeName) {
-  return getAllSubNodes(union, function (unionNode) {
-    return unionNode.types;
-  }).filter(function (typeNode) {
-    return typeNode.name.value === typeName;
-  });
-}
-
-function getAllSubNodes(object, getter) {
-  let subNodes = [];
-
-  for (
-    let _i32 = 0, _getAllNodes2 = getAllNodes(object);
-    _i32 < _getAllNodes2.length;
-    _i32++
-  ) {
-    var _getter;
-
-    const node = _getAllNodes2[_i32];
-    // istanbul ignore next (See: 'https://github.com/graphql/graphql-js/issues/2203')
-    subNodes = subNodes.concat(
-      (_getter = getter(node)) !== null && _getter !== void 0 ? _getter : [],
-    );
-  }
-
-  return subNodes;
 }
