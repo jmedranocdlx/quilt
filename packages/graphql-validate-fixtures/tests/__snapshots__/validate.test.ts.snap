@@ -737,6 +737,26 @@ Object {
 }
 `;
 
+exports[`validate validateFixtureAgainstAST() objects validates interfaces 1`] = `
+Object {
+  "fixturePath": "CharacterQuery/fixture.json",
+  "operationName": "CharacterQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [],
+}
+`;
+
+exports[`validate validateFixtureAgainstAST() objects validates interfaces 2`] = `
+Object {
+  "fixturePath": "CharacterQuery/fixture.json",
+  "operationName": "CharacterQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [],
+}
+`;
+
 exports[`validate validateFixtureAgainstAST() objects validates nested nullable objects 1`] = `
 Object {
   "fixturePath": "AddressQuery/fixture.json",

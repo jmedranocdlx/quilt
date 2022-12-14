@@ -12,6 +12,7 @@ import {
   isEnumType,
   isListType,
   isNonNullType,
+  isInterfaceType,
   isObjectType,
   isScalarType,
   isUnionType,
@@ -299,6 +300,15 @@ function validateValueAgainstObjectFieldDescription(
           );
         });
       });
+  }
+
+  if (isInterfaceType(makeTypeNullable(type))) {
+    inlineFragments[value.__typename].fields.forEach((field) => {
+      if (fields.some(({fieldName}) => fieldName === field.fieldName)) {
+        return;
+      }
+      fragmentFields.push(field);
+    });
   }
 
   return validateValueAgainstFields(

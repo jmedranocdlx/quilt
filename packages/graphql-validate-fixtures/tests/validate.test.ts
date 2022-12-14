@@ -434,6 +434,61 @@ describe('validate', () => {
           ),
         ).toMatchSnapshot();
       });
+
+      it('validates interfaces', () => {
+        const ast = createAST(
+          `
+          type Query {
+            character: Character!
+          }
+
+          type Human implements Character {
+            fullName: String!
+          }
+
+          type Droid implements Character {
+            serialNumber: String!
+          }
+
+          interface Character {
+            id: String!
+          }
+        `,
+          `
+          query CharacterQuery {
+            character {
+              __typename
+              id
+              ... on Human {
+                fullName
+              }
+              ... on Droid {
+                serialNumber
+              }
+            }
+          }
+        `,
+        );
+
+        expect(
+          validateAgainstAST(
+            {character: {__typename: 'Human', id: '123', fullName: 'John Doe'}},
+            ast,
+          ),
+        ).toMatchSnapshot();
+        expect(
+          validateAgainstAST(
+            {
+              character: {
+                __typename: 'Droid',
+                id: '123',
+                serialNumber: '12345',
+              },
+            },
+            ast,
+          ),
+        ).toMatchSnapshot();
+      });
     });
 
     describe('fragments', () => {
