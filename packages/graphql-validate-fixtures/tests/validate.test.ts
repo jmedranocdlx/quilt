@@ -229,6 +229,23 @@ describe('validate', () => {
           validateAgainstAST({data: {title: 'Some Title'}}, ast),
         ).toMatchSnapshot();
       });
+
+      it('works with nested data with errors', () => {
+        const ast = createAST(
+          `
+          type Query {
+            title: String!
+          }
+        `,
+          'query MyQuery { title }',
+        );
+        expect(
+          validateAgainstAST(
+            {data: null, errors: [{displayMessage: 'Some Error'}]},
+            ast,
+          ),
+        ).toMatchSnapshot();
+      });
     });
 
     describe('objects', () => {

@@ -567,6 +567,16 @@ Object {
 }
 `;
 
+exports[`validate validateFixtureAgainstAST() lists works with nested data with errors 1`] = `
+Object {
+  "fixturePath": "MyQuery/fixture.json",
+  "operationName": "MyQuery",
+  "operationPath": undefined,
+  "operationType": "query",
+  "validationErrors": Array [],
+}
+`;
+
 exports[`validate validateFixtureAgainstAST() objects creates errors for keys not present in the query 1`] = `
 Object {
   "fixturePath": "PersonQuery/fixture.json",

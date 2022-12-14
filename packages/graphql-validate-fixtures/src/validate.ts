@@ -12,7 +12,6 @@ import {
   isEnumType,
   isListType,
   isNonNullType,
-  isInterfaceType,
   isObjectType,
   isScalarType,
   isUnionType,
@@ -190,6 +189,16 @@ export function validateFixture(
   const value = {...fixtureContent};
   delete value[OPERATION_MARKER];
 
+  if (fixture.content.data === null && fixture.content.errors) {
+    return {
+      fixturePath: fixture.path,
+      operationName: operation.operationName,
+      operationType,
+      operationPath: filePath === 'GraphQL request' ? undefined : filePath,
+      validationErrors: [],
+    };
+  }
+
   return {
     fixturePath: fixture.path,
     operationName: operation.operationName,
@@ -293,6 +302,12 @@ function validateValueAgainstObjectFieldDescription(
             return;
           }
 
+          if (
+            fragmentFields.some(({fieldName}) => fieldName === field.fieldName)
+          ) {
+            return;
+          }
+
           const isGuaranteedTypeMatch = fragment.possibleTypes.includes(type);
 
           fragmentFields.push(
@@ -302,9 +317,15 @@ function validateValueAgainstObjectFieldDescription(
       });
   }
 
-  if (isInterfaceType(makeTypeNullable(type))) {
+  if (
+    inlineFragments[value.__typename] &&
+    inlineFragments[value.__typename].fields
+  ) {
     inlineFragments[value.__typename].fields.forEach((field) => {
       if (fields.some(({fieldName}) => fieldName === field.fieldName)) {
+        return;
+      }
+      if (fragmentFields.some(({fieldName}) => fieldName === field.fieldName)) {
         return;
       }
       fragmentFields.push(field);
