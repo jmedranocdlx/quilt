@@ -606,6 +606,10 @@ function validateValueAgainstType(
             return [];
           }
 
+          if (shallow) {
+            return [];
+          }
+
           return fields[key] == null
             ? fieldErrors.concat([
                 error(
