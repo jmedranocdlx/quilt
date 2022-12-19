@@ -260,6 +260,12 @@ function validateValueAgainstObjectFieldDescription(
     return [];
   }
 
+  if (isScalarType(fieldDescription.type)) {
+    if (fieldDescription.type.name === 'JSON') {
+      return [];
+    }
+  }
+
   const {
     fields = [],
     fragmentSpreads = [],
